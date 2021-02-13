@@ -33,6 +33,7 @@ async def getuserid(msg: TextMsg, *args):
                 message += '\nPS: 可能有用户没at到'
             await msg.reply(message)
 
+
 @bot.command(name='listrole')
 async def listrole(msg: TextMsg, *args):
     roleData = await bot.get(f'{API_URL}/guild-role/index?compress=0', params={'guild_id': str(msg.guild_id)})

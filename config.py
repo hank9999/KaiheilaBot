@@ -261,6 +261,8 @@ def checkPermission(token, function, roleIds):
                 return False
             else:
                 hasPermission = False
+                if 0 in roleIds:
+                    return True
                 for roleId in roleIds:
                     if roleId in config['permission'][function]:
                         hasPermission = True
