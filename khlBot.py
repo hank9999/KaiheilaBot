@@ -267,7 +267,11 @@ async def permission(msg: TextMsg, *args):
                         for function in config['permission']:
                             message += f'{function}: '
                             for roleId in config['permission'][function]:
-                                message += f'{roleId}({roleIdMapping[str(roleId)]}), '
+                                roleId = str(roleId)
+                                if roleId not in roleIdMapping:
+                                    message += f'{roleId}(角色已被删除), '
+                                else:
+                                    message += f'{roleId}({roleIdMapping[roleId]}), '
                             if len(config['permission'][function]) != 0:
                                 message = message[:-2] + '\n'
                             else:
