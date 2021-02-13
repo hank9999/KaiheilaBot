@@ -288,7 +288,7 @@ async def permission(msg: TextMsg, *args):
                             await msg.reply(message)
                 elif args[0] == 'del':
                     if len(args) != 3:
-                        await msg.reply('参数错误\n权限添加帮助: .permission del <功能名称> <角色ID>')
+                        await msg.reply('参数错误\n权限删除帮助: .permission del <功能名称> <角色ID>')
                     else:
                         message = operationPermission(token, 'del', args[1], args[2])
                         if message is None:
