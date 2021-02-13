@@ -1,0 +1,49 @@
+{
+    "guild_id": 0,
+    "channel_id": 0,
+    "admin": [],
+    "permission": {
+        "status": [],
+        "command": []
+    },
+    "function": {
+        "receive": {
+            "log": {
+                "enable": false,
+                "channel_id": -1
+            },
+            "Chat": {
+                "enable": false,
+                "channel_id": -1
+            },
+            "PlayerCommand": {
+                "enable": false,
+                "channel_id": -1
+            },
+            "Login": {
+                "enable": false,
+                "channel_id": -1
+            },
+            "Logout": {
+                "enable": false,
+                "channel_id": -1
+            },
+            "RconCommand": {
+                "enable": false,
+                "channel_id": -1
+            },
+            "commandReturn": {
+                "enable": false,
+                "channel_id": -1
+            }
+        },
+        "send": {
+            "status": {
+                "enable": false
+            },
+            "command": {
+                "enable": false
+            }
+        }
+    }
+}
