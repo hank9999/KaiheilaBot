@@ -16,6 +16,73 @@ async def hello(msg: TextMsg, *args):
     await msg.reply(f'GuildId: {msg.guild_id}\nChannelId: {msg.channel_id}\nAuthorId: {msg.author_id}')
 
 
+@bot.command(name='getuserid')
+async def getuserid(msg: TextMsg, *args):
+    if len(args) == 0:
+        await msg.reply(f'{msg.extra["author"]["username"]}: {msg.author_id}')
+    else:
+        if len(msg.mention) == 0:
+            await msg.reply('没有at到用户')
+        else:
+            message = ''
+            for user in args:
+                user = user.replace('#', ': ').replace('@', '\n')
+                message += user
+            message = message[1:]
+            if len(msg.mention) != len(args):
+                message += '\nPS: 可能有用户没at到'
+            await msg.reply(message)
+
+@bot.command(name='listrole')
+async def listrole(msg: TextMsg, *args):
+    roleData = await bot.get(f'{API_URL}/guild-role/index?compress=0', params={'guild_id': str(msg.guild_id)})
+    message = ''
+    for i in roleData:
+        message += f'{i["name"]}: {i["role_id"]}\n'
+    await msg.reply(message)
+
+
+@bot.command(name='help')
+async def help(msg: TextMsg, *args):
+    cmd_prefix = ''
+    for cp in botConfig['cmd_prefix']:
+        cmd_prefix += f'{cp} '
+    cmd_prefix = cmd_prefix[:-1]
+    message = '帮助:\n' \
+              f'支持{cmd_prefix}作为指令前缀\n' \
+              'PS: 以下指令均未添加前缀, 复制时请勿复制冒号\n' \
+              ' - hello: 获取服务器ID, 频道ID, 用户ID\n' \
+              ' - getuserid: 获得自己 或 at到的用户 的ID\n' \
+              ' - listrole: 列出当前频道角色ID\n' \
+              ' - settoken <token>: 设置服务器的token\n' \
+              ' - unsettoken: 解绑token\n' \
+              ' - setchannel:\n' \
+              '    - setchannel default: 设置默认频道\n' \
+              '    - setchannel reset: 恢复所有功能频道至默认\n' \
+              '    - setchannel <功能名称>: 设置单个功能频道\n' \
+              ' - info: 列出各功能启用情况, 对应频道ID(若为默认频道则不显示频道ID)\n' \
+              ' - function <功能名称> true/false: 设置功能开关(true启用, false关闭)\n' \
+              ' - status: 列出MC服务器在线情况, 版本, 在线玩家\n' \
+              ' - run <服务器名称> <指令>: 远程执行指令 (若指令内含有引号,请在引号前加 \ 进行反义; 原版指令无法获取返回,请开启日志转发功能)\n' \
+              ' - permission:\n' \
+              '    - permission list: 显示权限对应的角色名称及ID\n' \
+              '    - permission add <功能名称> <角色ID>: 给予角色对应权限\n' \
+              '    - permission del <功能名称> <角色ID>: 移除角色对应权限\n' \
+              '\n' \
+              '\n' \
+              '功能名称列表:\n' \
+              ' - log: 日志转发功能\n' \
+              ' - Chat: 聊天消息转发\n' \
+              ' - PlayerCommand: 玩家执行指令日志\n' \
+              ' - Login: 玩家登陆日志\n' \
+              ' - Logout: 玩家退出日志\n' \
+              ' - RconCommand: Rcon指令指令日志\n' \
+              ' - commandReturn: 远程执行指令返回\n' \
+              ' - status: 服务器状态\n' \
+              ' - command: 远程执行指令\n'
+    await msg.reply(message)
+
+
 @bot.command(name='settoken')
 async def settoken(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
@@ -58,7 +125,7 @@ async def setchannel(msg: TextMsg, *args):
             await msg.reply('您无权使用该指令')
         else:
             if len(args) == 0:
-                await msg.reply('默认频道: .setchannel default\n全功能恢复默认: .setchannel reset\n单功能: .setchannel <功能名称>')
+                await msg.reply('默认频道: .setchannel default\n恢复所有功能频道至默认: .setchannel reset\n设置单个功能频道: .setchannel <功能名称>')
             elif len(args) == 1:
                 message = setChannel(token, msg.channel_id, args[0])
                 await msg.reply(message)
@@ -171,19 +238,6 @@ async def run(msg: TextMsg, *args):
                         await msg.reply(f'指令发送成功 sn: {success}')
         else:
             await msg.reply('该功能未启用')
-
-
-@bot.command(name='listrole')
-async def listrole(msg: TextMsg, *args):
-    token = getToken(msg.guild_id)
-    if token is None:
-        await msg.reply('未配置token')
-    else:
-        roleData = await bot.get(f'{API_URL}/guild-role/index?compress=0', json={'guild_id': str(msg.guild_id)})
-        message = ''
-        for i in roleData:
-            message += f'{i["name"]}: {i["role_id"]}\n'
-        await msg.reply(message)
 
 
 @bot.command(name='permission')
