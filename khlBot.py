@@ -1,5 +1,6 @@
 from khl.hardcoded import API_URL
-from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, operationPermission, checkPermission
+from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, \
+    operationPermission, checkPermission, operationFilter
 from khl import TextMsg, Bot, Cert
 from config import setChannel, getServerConfig
 from serverUtils import getAllStatus, runCommand
@@ -69,6 +70,10 @@ async def help(msg: TextMsg, *args):
               '    - permission list: 显示权限对应的角色名称及ID\n' \
               '    - permission add <功能名称> <角色ID>: 给予角色对应权限\n' \
               '    - permission del <功能名称> <角色ID>: 移除角色对应权限\n' \
+              ' - filter:\n' \
+              '    - filter list: 显示各功能的过滤关键词\n' \
+              '    - filter add <功能名称> <角色ID>: 添加该功能的过滤关键词\n' \
+              '    - filter del <功能名称> <角色ID>: 移除该功能的过滤关键词\n' \
               '\n' \
               '\n' \
               '功能名称列表:\n' \
@@ -296,7 +301,59 @@ async def permission(msg: TextMsg, *args):
                         else:
                             await msg.reply(message)
                 else:
-                    await msg.reply('未知参数, 请查看帮助 .help permission')
+                    await msg.reply('未知参数, 请查看帮助 .help')
+
+
+@bot.command(name='filter')
+async def filter(msg: TextMsg, *args):
+    token = getToken(msg.guild_id)
+    if token is None:
+        await msg.reply('未配置token')
+    else:
+        adminPm = checkAdmin(token, int(msg.author_id))
+        if adminPm is None:
+            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+        elif not adminPm:
+            await msg.reply('您无权使用该指令')
+        else:
+            if len(args) > 0:
+                if args[0] == 'list':
+                    config = getServerConfig(token)
+                    if config is None:
+                        await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                    else:
+                        message = ''
+                        for function in config['function']['receive']:
+                            message += f'{function}: '
+                            if len(config['function']['receive'][function]['filter']) == 0:
+                                message += '无\n'
+                            else:
+                                filterList = ''
+                                for filter in config['function']['receive'][function]['filter']:
+                                    filterList += f'{filter}, '
+                                filterList = filterList[:-2]
+                                message += f'{filterList}\n'
+                        await msg.reply(message)
+                elif args[0] == 'add':
+                    if len(args) != 3:
+                        await msg.reply('参数错误\n过滤关键词添加帮助: .filter add <功能名称> <关键词>')
+                    else:
+                        message = operationFilter(token, 'add', args[1], args[2])
+                        if message is None:
+                            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                        else:
+                            await msg.reply(message)
+                elif args[0] == 'del':
+                    if len(args) != 3:
+                        await msg.reply('参数错误\n过滤关键词移除帮助: .filter del <功能名称> <角色ID>')
+                    else:
+                        message = operationFilter(token, 'del', args[1], args[2])
+                        if message is None:
+                            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                        else:
+                            await msg.reply(message)
+                else:
+                    await msg.reply('未知参数, 请查看帮助 .help')
 
 
 def botRun():

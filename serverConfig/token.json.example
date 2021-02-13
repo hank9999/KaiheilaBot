@@ -10,31 +10,38 @@
         "receive": {
             "log": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             },
             "Chat": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             },
             "PlayerCommand": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             },
             "Login": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             },
             "Logout": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             },
             "RconCommand": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             },
             "commandReturn": {
                 "enable": false,
-                "channel_id": -1
+                "channel_id": -1,
+                "filter": []
             }
         },
         "send": {

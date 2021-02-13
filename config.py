@@ -310,3 +310,57 @@ def operationPermission(token, operationType, function, roleId):
     except Exception as e:
         print(e)
         return None
+
+
+def checkFilter(token, function, data):
+    try:
+        configDir = f'serverConfig/{token}.json'
+        if os.path.exists(configDir):
+            with open(configDir, 'r', encoding='utf-8') as f:
+                config = json.loads(f.read())
+            if function in config['function']['receive']:
+                for filter in config['function']['receive'][function]['filter']:
+                    if str(data).find(str(filter)) >= 0:
+                        return True
+                return False
+            else:
+                return False
+        else:
+            return False
+    except Exception as e:
+        print(e)
+        return False
+
+def operationFilter(token, operationType, function, keyword):
+    keyword = str(keyword)
+    try:
+        configDir = f'serverConfig/{token}.json'
+        if os.path.exists(configDir):
+            with open(configDir, 'r', encoding='utf-8') as f:
+                config = json.loads(f.read())
+        else:
+            return None
+        if operationType == 'add':
+            if function in config['function']['receive']:
+                if keyword in config['function']['receive'][function]['filter']:
+                    return '该关键词已在该功能过滤关键词中'
+                else:
+                    config['function']['receive'][function]['filter'].append(keyword)
+            else:
+                return '该功能无过滤设置'
+        elif operationType == 'del':
+            if function in config['function']['receive']:
+                if keyword in config['function']['receive'][function]['filter']:
+                    config['function']['receive'][function]['filter'].remove(keyword)
+                else:
+                    return '该角色不在该功能权限列表中'
+            else:
+                return '该功能无过滤设置'
+        else:
+            return '没有这个操作类型'
+        with open(configDir, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(config))
+        return '设置成功'
+    except Exception as e:
+        print(e)
+        return None
