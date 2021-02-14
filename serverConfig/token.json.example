@@ -4,8 +4,10 @@
     "admin": [],
     "permission": {
         "status": [],
-        "command": []
+        "command": [],
+        "say": []
     },
+    "tellraw": "[\"\",{\"text\":\"<\",\"color\":\"white\"},{\"text\":\"%playerId%\",\"color\":\"gold\"},{\"text\":\"> \",\"color\":\"white\"},{\"text\":\"%text%\",\"color\":\"white\"}]",
     "function": {
         "receive": {
             "log": {
@@ -49,6 +51,9 @@
                 "enable": false
             },
             "command": {
+                "enable": false
+            },
+            "say": {
                 "enable": false
             }
         }

@@ -1,6 +1,6 @@
+import datetime
 from khl.hardcoded import API_URL
-from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, \
-    operationPermission, checkPermission, operationFilter
+from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, operationPermission, checkPermission, operationFilter, setTellraw, getTellraw
 from khl import TextMsg, Bot, Cert
 from config import setChannel, getServerConfig
 from serverUtils import getAllStatus, runCommand
@@ -62,7 +62,7 @@ async def help(msg: TextMsg, *args):
               '    - setchannel default: 设置默认频道\n' \
               '    - setchannel reset: 恢复所有功能频道至默认\n' \
               '    - setchannel <功能名称>: 设置单个功能频道\n' \
-              ' - info: 列出各功能启用情况, 对应频道ID(若为默认频道则不显示频道ID)\n' \
+              ' - info: 列出各功能启用情况, 对应频道ID(若为默认频道则不显示频道ID), tellraw格式\n' \
               ' - function <功能名称> true/false: 设置功能开关(true启用, false关闭)\n' \
               ' - status: 列出MC服务器在线情况, 版本, 在线玩家\n' \
               ' - run <服务器名称> <指令>: 远程执行指令 (若指令内含有引号,请在引号前加 \ 进行反义; 原版指令无法获取返回,请开启日志转发功能)\n' \
@@ -74,6 +74,8 @@ async def help(msg: TextMsg, *args):
               '    - filter list: 显示各功能的过滤关键词\n' \
               '    - filter add <功能名称> <角色ID>: 添加该功能的过滤关键词\n' \
               '    - filter del <功能名称> <角色ID>: 移除该功能的过滤关键词\n' \
+              ' - settellraw <json>: 设置开黑啦到服务器消息的tellraw格式, json需转义 (玩家ID: %playerId%, 消息内容: %text%)\n' \
+              ' - say <服务器名称> <消息内容>: 发送消息至服务器, 读取群组内昵称作为ID\n' \
               '\n' \
               '\n' \
               '功能名称列表:\n' \
@@ -136,7 +138,7 @@ async def setchannel(msg: TextMsg, *args):
                 message = setChannel(token, msg.channel_id, args[0])
                 await msg.reply(message)
             else:
-                await msg.reply('参数错误')
+                await msg.reply('参数错误\n默认频道: .setchannel default\n恢复所有功能频道至默认: .setchannel reset\n设置单个功能频道: .setchannel <功能名称>')
 
 
 @bot.command(name='info')
@@ -157,6 +159,7 @@ async def info(msg: TextMsg, *args):
                     if 'channel_id' in function[key]:
                         if function[key]['channel_id'] != -1:
                             message += f'      channel_id: {function[key]["channel_id"]}\n'
+            message += f'tellraw: {config["tellraw"]}\n'
             await msg.reply(message)
 
 
@@ -301,6 +304,11 @@ async def permission(msg: TextMsg, *args):
                         else:
                             await msg.reply(message)
                 else:
+                    message = '参数错误\n ' \
+                              'permission帮助:\n' \
+                              ' - permission list: 显示权限对应的角色名称及ID\n' \
+                              ' - permission add <功能名称> <角色ID>: 给予角色对应权限\n' \
+                              ' - permission del <功能名称> <角色ID>: 移除角色对应权限\n'
                     await msg.reply('未知参数, 请查看帮助 .help')
 
 
@@ -353,7 +361,70 @@ async def filter(msg: TextMsg, *args):
                         else:
                             await msg.reply(message)
                 else:
-                    await msg.reply('未知参数, 请查看帮助 .help')
+                    message = '参数错误\n' \
+                              'filter帮助:\n ' \
+                              ' - filter list: 显示各功能的过滤关键词\n' \
+                              ' - filter add <功能名称> <角色ID>: 添加该功能的过滤关键词\n' \
+                              ' - filter del <功能名称> <角色ID>: 移除该功能的过滤关键词\n'
+                    await msg.reply(message)
+
+
+@bot.command(name='settellraw')
+async def settellraw(msg: TextMsg, *args):
+    token = getToken(msg.guild_id)
+    if token is None:
+        await msg.reply('未配置token')
+    else:
+        adminPm = checkAdmin(token, int(msg.author_id))
+        if adminPm is None:
+            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+        elif not adminPm:
+            await msg.reply('您无权使用该指令')
+        else:
+            if len(args) == 1:
+                success = setTellraw(token, args[0])
+                if success is None:
+                    await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                elif success:
+                    await msg.reply('设置成功')
+                else:
+                    await msg.reply('未知错误')
+            else:
+                await msg.reply('参数错误\n设置tellraw帮助:\n - settellraw <json>: 设置开黑啦到服务器消息的tellraw格式, json需转义 (玩家ID: %playerId%, 消息内容: %text%)')
+
+
+@bot.command(name='say')
+async def say(msg: TextMsg, *args):
+    token = getToken(msg.guild_id)
+    if token is None:
+        await msg.reply('未配置token')
+    else:
+        if getFunctionSwitch(token, 'say'):
+            hasPermission = checkPermission(token, 'say', msg.author.roles)
+            if hasPermission is None:
+                await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
+            elif not hasPermission:
+                await msg.reply('您没有权限执行此指令')
+            else:
+                if len(args) < 2:
+                    await msg.reply('参数错误\nsay帮助:\n - say <服务器名称> <消息内容>: 发送消息至服务器, 读取群组内昵称作为ID')
+                tellraw = getTellraw(token)
+                if tellraw is None:
+                    await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
+                else:
+                    texts = ''
+                    for text in args[1:]:
+                        texts += f'{text} '
+                    texts = texts[:-1]
+                    tellraw = tellraw.replace('%playerId%', msg.extra['author']['nickname']).replace('%text%', texts)
+                    command = f'tellraw @a {tellraw}'
+                    success = await runCommand(token, args[0], command)
+                    if success == 'offline':
+                        await msg.reply('服务器不在线')
+                    elif success == 'failure':
+                        await msg.reply('消息发送失败')
+                    else:
+                        await bot.send(channel_id=str(msg.channel_id), type=1, content=f'[{args[0]}] [{datetime.datetime.now().strftime("%H:%M")}] {msg.extra["author"]["nickname"]}: {texts}')
 
 
 def botRun():

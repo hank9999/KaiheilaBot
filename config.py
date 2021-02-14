@@ -364,3 +364,34 @@ def operationFilter(token, operationType, function, keyword):
     except Exception as e:
         print(e)
         return None
+
+
+def setTellraw(token, tellraw):
+    try:
+        configDir = f'serverConfig/{token}.json'
+        if os.path.exists(configDir):
+            with open(configDir, 'r', encoding='utf-8') as f:
+                config = json.loads(f.read())
+        else:
+            return None
+        config['tellraw'] = tellraw
+        with open(configDir, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(config))
+        return True
+    except Exception as e:
+        print(e)
+        return None
+
+
+def getTellraw(token):
+    try:
+        configDir = f'serverConfig/{token}.json'
+        if os.path.exists(configDir):
+            with open(configDir, 'r', encoding='utf-8') as f:
+                config = json.loads(f.read())
+        else:
+            return None
+        return config['tellraw']
+    except Exception as e:
+        print(e)
+        return None
