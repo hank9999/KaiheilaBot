@@ -61,12 +61,12 @@ async def dataProcess(data, token, name):
         if getFunctionSwitch(token, 'Chat'):
             if not checkFilter(token, 'Chat', str(data["text"])):
                 channel_id = getChannel(token, 'Chat')
-                await bot.send(str(channel_id), type=1, content=f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {data["username"]}: {data["text"]}')
+                await bot.send(str(channel_id), type=1, content=f'[{name}] [{datetime.datetime.now().strftime("%H:%M")}] {data["username"]}: {data["text"]}')
     elif data['type'] == 'log':
         if getFunctionSwitch(token, 'log'):
             if not checkFilter(token, 'log', str(data['log'])):
                 channel_id = getChannel(token, 'log')
-                await bot.send(str(channel_id), type=1, content=str(data['log']))
+                await bot.send(str(channel_id), type=1, content=f'[{name}] {data["log"]}')
     elif data['type'] == 'PlayerCommand':
         if getFunctionSwitch(token, 'PlayerCommand'):
             if not checkFilter(token, 'PlayerCommand', str(data['command'])):
