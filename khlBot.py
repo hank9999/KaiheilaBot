@@ -309,7 +309,7 @@ async def permission(msg: TextMsg, *args):
                               ' - permission list: 显示权限对应的角色名称及ID\n' \
                               ' - permission add <功能名称> <角色ID>: 给予角色对应权限\n' \
                               ' - permission del <功能名称> <角色ID>: 移除角色对应权限\n'
-                    await msg.reply('未知参数, 请查看帮助 .help')
+                    await msg.reply(message)
 
 
 @bot.command(name='filter')
