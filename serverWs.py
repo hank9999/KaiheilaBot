@@ -6,7 +6,7 @@ import asyncio
 from config import getServerConfig, getWsConfig, getChannel, getFunctionSwitch, checkFilter
 from khlBot import bot
 from cardMessage import actionMessage
-from serverUtils import addStatus, addClient, deleteClient
+from serverUtils import addStatus, addClient, deleteClient, getSnType
 
 
 async def websocket_handler(request):
@@ -85,7 +85,10 @@ async def dataProcess(data, token, name):
         if getFunctionSwitch(token, 'commandReturn'):
             if not checkFilter(token, 'commandReturn', str(data["return"])):
                 channel_id = getChannel(token, 'command')
-                await bot.send(str(channel_id), type=1, content=f'sn: {data["sn"]}\n{data["return"]}')
+                if (await getSnType(token, data['sn'])) == 'run':
+                    await bot.send(str(channel_id), type=1, content=f'sn: {data["sn"]}\n{data["return"]}')
+                else:
+                    pass
     else:
         pass
 

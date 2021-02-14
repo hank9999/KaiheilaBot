@@ -3,7 +3,7 @@ from khl.hardcoded import API_URL
 from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, operationPermission, checkPermission, operationFilter, setTellraw, getTellraw
 from khl import TextMsg, Bot, Cert
 from config import setChannel, getServerConfig
-from serverUtils import getAllStatus, runCommand
+from serverUtils import getAllStatus, runCommand, addSnType
 
 botConfig = getBotConfig()
 
@@ -244,6 +244,7 @@ async def run(msg: TextMsg, *args):
                     elif success == 'failure':
                         await msg.reply('指令发送失败')
                     else:
+                        await addSnType(token, success, 'run')
                         await msg.reply(f'指令发送成功 sn: {success}')
         else:
             await msg.reply('该功能未启用')
@@ -424,6 +425,7 @@ async def say(msg: TextMsg, *args):
                     elif success == 'failure':
                         await msg.reply('消息发送失败')
                     else:
+                        await addSnType(token, success, 'say')
                         await bot.send(channel_id=str(msg.channel_id), type=1, content=f'[{args[0]}] [{datetime.datetime.now().strftime("%H:%M")}] {msg.extra["author"]["nickname"]}: {texts}')
 
 

@@ -5,7 +5,7 @@ import asyncio
 status = {}
 sn = {}
 clients = {}
-
+snType = {}
 
 async def addClient(token, name, client):
     global clients
@@ -29,6 +29,25 @@ async def addStatus(data, token, name):
             'version': data['version'],
             'onlinePlayer': data['onlinePlayer']
         }
+
+
+async def addSnType(token, sn, sntype):
+    global snType
+    sn = str(sn)
+    if token not in snType:
+        snType[token] = {}
+    snType[token][sn] = sntype
+
+
+async def getSnType(token, sn):
+    global snType
+    sn = str(sn)
+    if token not in snType:
+        return 'run'
+    elif sn not in snType[token]:
+        return 'run'
+    else:
+        return snType[token][sn]
 
 
 async def getAllStatus(token):
