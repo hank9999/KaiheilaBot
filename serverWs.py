@@ -14,7 +14,9 @@ async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     query = dict(request.query)
-    realIp = request.headers.get('X-FORWARDED-FOR',None)
+    realIp = request.headers.get('X-FORWARDED-FOR', None)
+    if realIp is None:
+        realIp = request.remote
     if 'token' not in query:
         await ws.close(code=1000, message=b'No Token')
         print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} No token')
