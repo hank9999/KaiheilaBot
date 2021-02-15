@@ -1,6 +1,6 @@
 import datetime
 from khl.hardcoded import API_URL
-from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, operationPermission, checkPermission, operationFilter, setTellraw, getTellraw
+from config import getBotConfig, getToken, setFunctionSwitch, getFunctionSwitch, setToken, checkAdmin, unsetToken, operationPermission, checkPermission, operationFilter, setTellraw, getTellraw, getChannel
 from khl import TextMsg, Bot, Cert
 from config import setChannel, getServerConfig
 from serverUtils import getAllStatus, runCommand, addSnType
@@ -409,24 +409,28 @@ async def say(msg: TextMsg, *args):
             else:
                 if len(args) < 2:
                     await msg.reply('参数错误\nsay帮助:\n - say <服务器名称> <消息内容>: 发送消息至服务器, 读取群组内昵称作为ID')
-                tellraw = getTellraw(token)
-                if tellraw is None:
-                    await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
                 else:
-                    texts = ''
-                    for text in args[1:]:
-                        texts += f'{text} '
-                    texts = texts[:-1]
-                    tellraw = tellraw.replace('%playerId%', msg.extra['author']['nickname']).replace('%text%', texts)
-                    command = f'tellraw @a {tellraw}'
-                    success = await runCommand(token, args[0], command)
-                    if success == 'offline':
-                        await msg.reply('服务器不在线')
-                    elif success == 'failure':
-                        await msg.reply('消息发送失败')
+                    tellraw = getTellraw(token)
+                    if tellraw is None:
+                        await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
                     else:
-                        await addSnType(token, success, 'say')
-                        await bot.send(channel_id=str(msg.channel_id), type=1, content=f'[{args[0]}] [{datetime.datetime.now().strftime("%H:%M")}] {msg.extra["author"]["nickname"]}: {texts}')
+                        texts = ''
+                        for text in args[1:]:
+                            texts += f'{text} '
+                        texts = texts[:-1]
+                        tellraw = tellraw.replace('%playerId%', msg.extra['author']['nickname']).replace('%text%', texts)
+                        command = f'tellraw @a {tellraw}'
+                        success = await runCommand(token, args[0], command)
+                        if success == 'offline':
+                            await msg.reply('服务器不在线')
+                        elif success == 'failure':
+                            await msg.reply('消息发送失败')
+                        else:
+                            await addSnType(token, success, 'say')
+                            channel_id = getChannel(token, 'Chat')
+                            if channel_id is None:
+                                channel_id = msg.channel_id
+                            await bot.send(channel_id=str(channel_id), type=1, content=f'[{args[0]}] [{datetime.datetime.now().strftime("%H:%M")}] {msg.extra["author"]["nickname"]}: {texts}')
 
 
 def botRun():
