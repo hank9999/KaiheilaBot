@@ -14,31 +14,32 @@ async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     query = dict(request.query)
+    realIp = request.headers.get('X-FORWARDED-FOR',None)
     if 'token' not in query:
         await ws.close(code=1000, message=b'No Token')
-        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} No token')
+        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} No token')
         return ws
     serverConfig = getServerConfig(query['token'])
     if serverConfig is None:
         await ws.close(code=1000, message=b'Wrong Token')
-        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} {query["token"]} Wrong Token')
+        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} {query["token"]} Wrong Token')
         return ws
     if 'name' not in query:
         await ws.close(code=1000, message=b'No Name')
-        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} {query["token"]} No Name')
+        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} {query["token"]} No Name')
         return ws
     if len(query['name']) == 0:
         await ws.close(code=1000, message=b'Empty Name')
-        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} {query["token"]} Empty Name')
+        print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} {query["token"]} Empty Name')
         return ws
     await addClient(query['token'], query['name'], ws)
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:
-            print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} {query["token"]} {query["name"]} {msg.data}')
+            print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} {query["token"]} {query["name"]} {msg.data}')
             await dataProcess(msg.data, query['token'], query['name'])
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} {query["token"]} {query["name"]} ws connection closed with exception {ws.exception()}')
-    print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {request.remote} {query["token"]} {query["name"]} websocket connection closed')
+            print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} {query["token"]} {query["name"]} ws connection closed with exception {ws.exception()}')
+    print(f'[{datetime.datetime.now().strftime("%m-%d %H:%M:%S")}] {realIp} {query["token"]} {query["name"]} websocket connection closed')
 
     return ws
 
