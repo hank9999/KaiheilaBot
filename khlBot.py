@@ -12,18 +12,23 @@ cert = Cert(type=botConfig['type'], client_id=botConfig['client_id'], client_sec
 bot = Bot(cmd_prefix=botConfig['cmd_prefix'], cert=cert)
 
 
+async def reply(msg, text):
+    if msg.guild_id not in botConfig['limitGuild'] or msg.channel_id in botConfig['limitGuild'][msg.guild_id]:
+        await msg.reply(text)
+
+
 @bot.command(name='hello')
 async def hello(msg: TextMsg, *args):
-    await msg.reply(f'GuildId: {msg.guild_id}\nChannelId: {msg.channel_id}\nAuthorId: {msg.author_id}')
+    await reply(msg, f'GuildId: {msg.guild_id}\nChannelId: {msg.channel_id}\nAuthorId: {msg.author_id}')
 
 
 @bot.command(name='getuserid')
 async def getuserid(msg: TextMsg, *args):
     if len(args) == 0:
-        await msg.reply(f'{msg.extra["author"]["username"]}: {msg.author_id}')
+        await reply(msg, f'{msg.extra["author"]["username"]}: {msg.author_id}')
     else:
         if len(msg.mention) == 0:
-            await msg.reply('没有at到用户')
+            await reply(msg, '没有at到用户')
         else:
             message = ''
             for user in args:
@@ -32,7 +37,7 @@ async def getuserid(msg: TextMsg, *args):
             message = message[1:]
             if len(msg.mention) != len(args):
                 message += '\nPS: 可能有用户没at到'
-            await msg.reply(message)
+            await reply(msg, message)
 
 
 @bot.command(name='listrole')
@@ -41,7 +46,7 @@ async def listrole(msg: TextMsg, *args):
     message = ''
     for i in roleData:
         message += f'{i["name"]}: {i["role_id"]}\n'
-    await msg.reply(message)
+    await reply(msg, message)
 
 
 @bot.command(name='help')
@@ -88,68 +93,68 @@ async def help(msg: TextMsg, *args):
               ' - commandReturn: 远程执行指令返回\n' \
               ' - status: 服务器状态\n' \
               ' - command: 远程执行指令\n'
-    await msg.reply(message)
+    await reply(msg, message)
 
 
 @bot.command(name='settoken')
 async def settoken(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is not None:
-        await msg.reply('已配置token, 若需重设, 请先解绑')
+        await reply(msg, '已配置token, 若需重设, 请先解绑')
     else:
         if len(args) != 1:
-            await msg.reply('帮助: .settoken <token>')
+            await reply(msg, '帮助: .settoken <token>')
         else:
             message = setToken(args[0], msg.guild_id)
-            await msg.reply(message)
+            await reply(msg, message)
 
 
 @bot.command(name='unsettoken')
 async def unsettoken(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         adminPm = checkAdmin(token, int(msg.author_id))
         if adminPm is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         elif not adminPm:
-            await msg.reply('您无权使用该指令')
+            await reply(msg, '您无权使用该指令')
         else:
             message = unsetToken(token, msg.guild_id)
-            await msg.reply(message)
+            await reply(msg, message)
 
 
 @bot.command(name='setchannel')
 async def setchannel(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         adminPm = checkAdmin(token, int(msg.author_id))
         if adminPm is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         elif not adminPm:
-            await msg.reply('您无权使用该指令')
+            await reply(msg, '您无权使用该指令')
         else:
             if len(args) == 0:
-                await msg.reply('默认频道: .setchannel default\n恢复所有功能频道至默认: .setchannel reset\n设置单个功能频道: .setchannel <功能名称>')
+                await reply(msg, '默认频道: .setchannel default\n恢复所有功能频道至默认: .setchannel reset\n设置单个功能频道: .setchannel <功能名称>')
             elif len(args) == 1:
                 message = setChannel(token, msg.channel_id, args[0])
-                await msg.reply(message)
+                await reply(msg, message)
             else:
-                await msg.reply('参数错误\n默认频道: .setchannel default\n恢复所有功能频道至默认: .setchannel reset\n设置单个功能频道: .setchannel <功能名称>')
+                await reply(msg, '参数错误\n默认频道: .setchannel default\n恢复所有功能频道至默认: .setchannel reset\n设置单个功能频道: .setchannel <功能名称>')
 
 
 @bot.command(name='info')
 async def info(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         config = getServerConfig(token)
         if config is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         else:
             message = ''
             for functionType, function in config['function'].items():
@@ -160,44 +165,44 @@ async def info(msg: TextMsg, *args):
                         if function[key]['channel_id'] != -1:
                             message += f'      channel_id: {function[key]["channel_id"]}\n'
             message += f'tellraw: {config["tellraw"]}\n'
-            await msg.reply(message)
+            await reply(msg, message)
 
 
 @bot.command(name='function')
 async def function(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         adminPm = checkAdmin(token, int(msg.author_id))
         if adminPm is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         elif not adminPm:
-            await msg.reply('您无权使用该指令')
+            await reply(msg, '您无权使用该指令')
         else:
             if len(args) != 2:
-                await msg.reply('设置功能开关帮助: .function <功能名称> true/false')
+                await reply(msg, '设置功能开关帮助: .function <功能名称> true/false')
             else:
                 message = setFunctionSwitch(token, args[0], args[1])
-                await msg.reply(message)
+                await reply(msg, message)
 
 
 @bot.command(name='status')
 async def status(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         if getFunctionSwitch(token, 'status'):
             hasPermission = checkPermission(token, 'status', msg.author.roles)
             if hasPermission is None:
-                await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
+                await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
             elif not hasPermission:
-                await msg.reply('您没有权限执行此指令')
+                await reply(msg, '您没有权限执行此指令')
             else:
                 data = await getAllStatus(token)
                 if data is None:
-                    await msg.reply('无服务器在线')
+                    await reply(msg, '无服务器在线')
                 else:
                     message = ''
                     for server in data:
@@ -213,26 +218,26 @@ async def status(msg: TextMsg, *args):
                                     onlinePlayers += f'{player}, '
                                 onlinePlayers = onlinePlayers[:-2]
                                 message += f'{onlinePlayers}\n'
-                    await msg.reply(message)
+                    await reply(msg, message)
         else:
-            await msg.reply('该功能未启用')
+            await reply(msg, '该功能未启用')
 
 
 @bot.command(name='run')
 async def run(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         if getFunctionSwitch(token, 'command'):
             hasPermission = checkPermission(token, 'command', msg.author.roles)
             if hasPermission is None:
-                await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
+                await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
             elif not hasPermission:
-                await msg.reply('您没有权限执行此指令')
+                await reply(msg, '您没有权限执行此指令')
             else:
                 if len(args) < 2:
-                    await msg.reply('远程执行指令帮助:\n.run <服务器名称> <指令>(若指令内含有引号 请在引号前加 \ 进行反义)\n原版指令无法获取返回 请开启日志转发功能')
+                    await reply(msg, '远程执行指令帮助:\n.run <服务器名称> <指令>(若指令内含有引号 请在引号前加 \ 进行反义)\n原版指令无法获取返回 请开启日志转发功能')
                 else:
                     command = ''
                     for i in args[1:]:
@@ -240,33 +245,33 @@ async def run(msg: TextMsg, *args):
                     command = command[:-1]
                     success = await runCommand(token, args[0], command)
                     if success == 'offline':
-                        await msg.reply('服务器不在线')
+                        await reply(msg, '服务器不在线')
                     elif success == 'failure':
-                        await msg.reply('指令发送失败')
+                        await reply(msg, '指令发送失败')
                     else:
                         await addSnType(token, success, 'run')
-                        await msg.reply(f'指令发送成功 sn: {success}')
+                        await reply(msg, f'指令发送成功 sn: {success}')
         else:
-            await msg.reply('该功能未启用')
+            await reply(msg, '该功能未启用')
 
 
 @bot.command(name='permission')
 async def permission(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         adminPm = checkAdmin(token, int(msg.author_id))
         if adminPm is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         elif not adminPm:
-            await msg.reply('您无权使用该指令')
+            await reply(msg, '您无权使用该指令')
         else:
             if len(args) > 0:
                 if args[0] == 'list':
                     config = getServerConfig(token)
                     if config is None:
-                        await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                        await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                     else:
                         message = ''
                         roleData = await bot.get(f'{API_URL}/guild-role/index?compress=0', json={'guild_id': str(msg.guild_id)})
@@ -285,51 +290,51 @@ async def permission(msg: TextMsg, *args):
                                 message = message[:-2] + '\n'
                             else:
                                 message += '无\n'
-                        await msg.reply(message)
+                        await reply(msg, message)
                 elif args[0] == 'add':
                     if len(args) != 3:
-                        await msg.reply('参数错误\n权限添加帮助: .permission add <功能名称> <角色ID>')
+                        await reply(msg, '参数错误\n权限添加帮助: .permission add <功能名称> <角色ID>')
                     else:
                         message = operationPermission(token, 'add', args[1], args[2])
                         if message is None:
-                            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                         else:
-                            await msg.reply(message)
+                            await reply(msg, message)
                 elif args[0] == 'del':
                     if len(args) != 3:
-                        await msg.reply('参数错误\n权限删除帮助: .permission del <功能名称> <角色ID>')
+                        await reply(msg, '参数错误\n权限删除帮助: .permission del <功能名称> <角色ID>')
                     else:
                         message = operationPermission(token, 'del', args[1], args[2])
                         if message is None:
-                            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                         else:
-                            await msg.reply(message)
+                            await reply(msg, message)
                 else:
                     message = '参数错误\n ' \
                               'permission帮助:\n' \
                               ' - permission list: 显示权限对应的角色名称及ID\n' \
                               ' - permission add <功能名称> <角色ID>: 给予角色对应权限\n' \
                               ' - permission del <功能名称> <角色ID>: 移除角色对应权限\n'
-                    await msg.reply(message)
+                    await reply(msg, message)
 
 
 @bot.command(name='filter')
 async def filter(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         adminPm = checkAdmin(token, int(msg.author_id))
         if adminPm is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         elif not adminPm:
-            await msg.reply('您无权使用该指令')
+            await reply(msg, '您无权使用该指令')
         else:
             if len(args) > 0:
                 if args[0] == 'list':
                     config = getServerConfig(token)
                     if config is None:
-                        await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                        await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                     else:
                         message = ''
                         for function in config['function']['receive']:
@@ -342,77 +347,77 @@ async def filter(msg: TextMsg, *args):
                                     filterList += f'{filter}, '
                                 filterList = filterList[:-2]
                                 message += f'{filterList}\n'
-                        await msg.reply(message)
+                        await reply(msg, message)
                 elif args[0] == 'add':
                     if len(args) != 3:
-                        await msg.reply('参数错误\n过滤关键词添加帮助: .filter add <功能名称> <关键词>')
+                        await reply(msg, '参数错误\n过滤关键词添加帮助: .filter add <功能名称> <关键词>')
                     else:
                         message = operationFilter(token, 'add', args[1], args[2])
                         if message is None:
-                            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                         else:
-                            await msg.reply(message)
+                            await reply(msg, message)
                 elif args[0] == 'del':
                     if len(args) != 3:
-                        await msg.reply('参数错误\n过滤关键词移除帮助: .filter del <功能名称> <角色ID>')
+                        await reply(msg, '参数错误\n过滤关键词移除帮助: .filter del <功能名称> <角色ID>')
                     else:
                         message = operationFilter(token, 'del', args[1], args[2])
                         if message is None:
-                            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                         else:
-                            await msg.reply(message)
+                            await reply(msg, message)
                 else:
                     message = '参数错误\n' \
                               'filter帮助:\n ' \
                               ' - filter list: 显示各功能的过滤关键词\n' \
                               ' - filter add <功能名称> <角色ID>: 添加该功能的过滤关键词\n' \
                               ' - filter del <功能名称> <角色ID>: 移除该功能的过滤关键词\n'
-                    await msg.reply(message)
+                    await reply(msg, message)
 
 
 @bot.command(name='settellraw')
 async def settellraw(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         adminPm = checkAdmin(token, int(msg.author_id))
         if adminPm is None:
-            await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+            await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
         elif not adminPm:
-            await msg.reply('您无权使用该指令')
+            await reply(msg, '您无权使用该指令')
         else:
             if len(args) == 1:
                 success = setTellraw(token, args[0])
                 if success is None:
-                    await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
+                    await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试重新配置或联系管理')
                 elif success:
-                    await msg.reply('设置成功')
+                    await reply(msg, '设置成功')
                 else:
-                    await msg.reply('未知错误')
+                    await reply(msg, '未知错误')
             else:
-                await msg.reply('参数错误\n设置tellraw帮助:\n - settellraw <json>: 设置开黑啦到服务器消息的tellraw格式, json需转义 (玩家ID: %playerId%, 消息内容: %text%)')
+                await reply(msg, '参数错误\n设置tellraw帮助:\n - settellraw <json>: 设置开黑啦到服务器消息的tellraw格式, json需转义 (玩家ID: %playerId%, 消息内容: %text%)')
 
 
 @bot.command(name='say')
 async def say(msg: TextMsg, *args):
     token = getToken(msg.guild_id)
     if token is None:
-        await msg.reply('未配置token')
+        await reply(msg, '未配置token')
     else:
         if getFunctionSwitch(token, 'say'):
             hasPermission = checkPermission(token, 'say', msg.author.roles)
             if hasPermission is None:
-                await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
+                await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
             elif not hasPermission:
-                await msg.reply('您没有权限执行此指令')
+                await reply(msg, '您没有权限执行此指令')
             else:
                 if len(args) < 2:
-                    await msg.reply('参数错误\nsay帮助:\n - say <服务器名称> <消息内容>: 发送消息至服务器, 读取群组内昵称作为ID')
+                    await reply(msg, '参数错误\nsay帮助:\n - say <服务器名称> <消息内容>: 发送消息至服务器, 读取群组内昵称作为ID')
                 else:
                     tellraw = getTellraw(token)
                     if tellraw is None:
-                        await msg.reply('已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
+                        await reply(msg, '已获取token但未获取到配置文件, 请重试.\n若多次出现请尝试联系管理')
                     else:
                         texts = ''
                         for text in args[1:]:
@@ -422,9 +427,9 @@ async def say(msg: TextMsg, *args):
                         command = f'tellraw @a {tellraw}'
                         success = await runCommand(token, args[0], command)
                         if success == 'offline':
-                            await msg.reply('服务器不在线')
+                            await reply(msg, '服务器不在线')
                         elif success == 'failure':
-                            await msg.reply('消息发送失败')
+                            await reply(msg, '消息发送失败')
                         else:
                             await addSnType(token, success, 'say')
                             channel_id = getChannel(token, 'Chat')
